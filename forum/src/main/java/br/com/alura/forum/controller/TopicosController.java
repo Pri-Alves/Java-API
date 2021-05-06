@@ -8,6 +8,9 @@ import br.com.alura.forum.modelo.Topico;
 import br.com.alura.forum.repository.CursoRepository;
 import br.com.alura.forum.repository.TopicoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -29,13 +32,16 @@ public class TopicosController {
     private TopicoRepository topicoRepository;
 
     @GetMapping
-    // utilizando RestController no lugar de Controlle, elemina a necessidade de colocar o @ResponseBody // usado para quando nao vamos navegar para uma pagina e sim fazer uma api rest
-    public List<TopicoDto> lista(String nomeCurso){
+    // utilizando RestController no lugar de Controlle, elimina a necessidade de colocar o @ResponseBody // usado para quando nao vamos navegar para uma pagina e sim fazer uma api rest
+    public Page<TopicoDto> lista(@RequestParam(required = false) String nomeCurso,
+                                 @RequestParam int pagina, @RequestParam int qtd){ //incluindo paginação
+        Pageable paginacao = PageRequest.of(pagina, qtd);
+
         if (nomeCurso == null){
-            List<Topico> topicos = topicoRepository.findAll(); //findAll vem da herança do jpa em topicosrepository e serve para consultar tudo
+            Page<Topico> topicos = topicoRepository.findAll(paginacao); //findAll vem da herança do jpa em topicosrepository e serve para consultar tudo
             return TopicoDto.converter(topicos);
         } else {
-            List<Topico> topicos = topicoRepository.findByCursoNome(nomeCurso); //criar metodo que busca o nome na tabela curso, ele entende através do proprio nome, poderia ser tb findByCurso_Nome
+            Page<Topico> topicos = topicoRepository.findByCursoNome(nomeCurso, paginacao); //criar metodo que busca o nome na tabela curso, ele entende através do proprio nome, poderia ser tb findByCurso_Nome
             return TopicoDto.converter(topicos);
         }
     }
