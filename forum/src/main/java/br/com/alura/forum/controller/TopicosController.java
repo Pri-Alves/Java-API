@@ -8,6 +8,8 @@ import br.com.alura.forum.modelo.Topico;
 import br.com.alura.forum.repository.CursoRepository;
 import br.com.alura.forum.repository.TopicoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -33,6 +35,7 @@ public class TopicosController {
     private TopicoRepository topicoRepository;
 
     @GetMapping
+    @Cacheable(value = "listaDeTopicos") //Criar cache para melhorrar a performance
     // utilizando RestController no lugar de Controlle, elimina a necessidade de colocar o @ResponseBody // usado para quando nao vamos navegar para uma pagina e sim fazer uma api rest
     public Page<TopicoDto> lista(@RequestParam(required = false) String nomeCurso,
                                  @PageableDefault(sort = "id", direction = Sort.Direction.ASC, page = 0, size = 10) Pageable paginacao){
@@ -50,6 +53,7 @@ public class TopicosController {
 
     @PostMapping
     @Transactional
+    @CacheEvict(value = "listaDeTopicos", allEntries = true) //apagar o cache
     public ResponseEntity<TopicoDto> cadastrar(@RequestBody @Valid TopicosForm form, UriComponentsBuilder uriBuilder){
         Topico topico = form.converter(cursoRepository);
         topicoRepository.save(topico);
@@ -69,6 +73,7 @@ public class TopicosController {
     }
 
     @PutMapping("/{id}")
+    @CacheEvict(value = "listaDeTopicos", allEntries = true) //apagar o cache
     @Transactional //pra ele realizar a transação automaticmente caso nao ocorram exceptions
     public ResponseEntity<TopicoDto> atualizar(@PathVariable Long id, @RequestBody @Valid AtualizacaoTopicosForm form ) {
         Optional<Topico> optional = topicoRepository.findById(id);
@@ -81,6 +86,7 @@ public class TopicosController {
 
     @DeleteMapping("/{id}")
     @Transactional
+    @CacheEvict(value = "listaDeTopicos", allEntries = true) //apagar o cache
     public ResponseEntity<TopicoDto> remover(@PathVariable Long id) {
         Optional<Topico> optional = topicoRepository.findById(id);
         if (optional.isPresent()){
